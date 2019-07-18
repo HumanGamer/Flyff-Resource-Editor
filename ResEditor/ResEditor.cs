@@ -8,12 +8,60 @@ namespace ResEditor
 	public partial class ResEditor : Form
 	{
 		public string[] args;
-		private ResourceFile resourceFile;
+		private ResourceFile _currentFile;
+		private string _currentPath;
 		private bool _dirty;
 
 		public ResEditor()
 		{
 			InitializeComponent();
+		}
+
+		private void UpdateDisplay()
+		{
+			if (this._currentFile == null)
+			{
+				Text = "Flyff ResEditor";
+				return;
+			}
+
+			if (string.IsNullOrWhiteSpace(_currentPath))
+				Text = "Untitled - Flyff ResEditor";
+			else
+				Text = Path.GetFileName(this._currentPath) + " - Flyff ResEditor";
+
+			this.fileList.Items.Clear();
+
+			for (int i = 0; i < this._currentFile.Entries.Length; i++)
+			{
+				string text = this._currentFile.Entries[i].FileName;
+
+				int imgIndex = GetImageIndex(text);
+
+				ListViewItem listViewItem = this.fileList.Items.Add(text);
+				listViewItem.SubItems.Add(GetSizeString(this._currentFile.Entries[i].FileSize));
+				listViewItem.ImageIndex = imgIndex;
+				this.fileList.Groups[imgIndex].Items.Add(listViewItem);
+			}
+			this.mniClose.Enabled = true;
+		}
+
+		private bool CheckDirty()
+		{
+			if (this._dirty)
+			{
+				switch (MessageBox.Show("The resource has been modified.\n\nDo you want to save your changes?", "Flyff ResEditor", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning))
+				{
+					case DialogResult.Cancel:
+						return true;
+					case DialogResult.No:
+						return false;
+					case DialogResult.Yes:
+						return !Save();
+				}
+			}
+
+			return false;
 		}
 
 		private void New()
@@ -25,106 +73,74 @@ namespace ResEditor
 
 		private void Open()
 		{
-			if (this._dirty)
-			{
-				switch (MessageBox.Show("Do you want to save your changes?", "Flyff ResEditor", MessageBoxButtons.YesNoCancel))
-				{
-					case DialogResult.Cancel:
-						return;
-					case DialogResult.Yes:
-						SaveAs();
-						break;
-				}
-			}
+			if (CheckDirty())
+				return;
+
 			OpenFileDialog ofd = new OpenFileDialog();
 			ofd.Filter = "Flyff Resource Files|*.res|All Files|*.*";
 			ofd.Multiselect = false;
-			if (ofd.ShowDialog() == DialogResult.Cancel)
+
+			if (ofd.ShowDialog() == DialogResult.Cancel || string.IsNullOrWhiteSpace(ofd.FileName))
 				return;
 
-			this.resourceFile = null;
-			Text = "Flyff ResEditor";
-			this.fileList.Items.Clear();
-			this.resourceFile = new ResourceFile(ofd.FileName);
-			this.resourceFile.Path = ofd.FileName;
-			Text = this.resourceFile.Path.Substring(this.resourceFile.Path.LastIndexOf('\\') + 1) + " - Flyff ResEditor";
-			for (int i = 0; i < this.resourceFile.Entries.Length; i++)
-			{
-				string text = this.resourceFile.Entries[i].FileName;
-				int num;
-				switch (text.Substring(text.LastIndexOf('.') + 1))
-				{
-					case "inc":
-						num = 2;
-						break;
-					case "h":
-						num = 1;
-						break;
-					case "csv":
-						num = 3;
-						break;
-					case "txt":
-						num = 4;
-						break;
-					default:
-						num = 0;
-						break;
-				}
-				ListViewItem listViewItem = this.fileList.Items.Add(this.resourceFile.Entries[i].FileName);
-				listViewItem.SubItems.Add(GetSizeString(this.resourceFile.Entries[i].FileSize));
-				listViewItem.ImageIndex = num;
-				this.fileList.Groups[num].Items.Add(listViewItem);
-			}
-			this.mniClose.Enabled = true;
-			this._dirty = false;
+			Open(ofd.FileName);
 		}
 
-		private void Save()
+		public void Open(string path)
 		{
-			if (this.resourceFile == null || this.resourceFile.Path == null)
+			this._currentFile = new ResourceFile(path);
+			this._currentPath = path;
+
+			this._dirty = false;
+
+			UpdateDisplay();
+		}
+
+		private bool Save()
+		{
+			if (this._currentFile == null || this._currentPath == null)
 			{
-				SaveAs();
-				return;
+				return SaveAs();
 			}
-			this.resourceFile.Save(this.resourceFile.Path);
+			this._currentFile.Save(this._currentPath);
 			mniSave.Enabled = false;
 			tsbSave.Enabled = false;
 			this._dirty = false;
+
+			return true;
 		}
 
-		private void SaveAs()
+		private bool SaveAs()
 		{
 			SaveFileDialog sfd = new SaveFileDialog();
 			sfd.Filter = "Flyff Resources Files|*.res|All Files|*.*";
-			sfd.FileName = ((this.resourceFile == null || this.resourceFile.Path == null) ? "" : this.resourceFile.Path.Substring(this.resourceFile.Path.LastIndexOf('\\') + 1));
-			if (sfd.ShowDialog() == DialogResult.Cancel)
-				return;
 
-			this.resourceFile.Save(sfd.FileName);
-			this.resourceFile.Path = sfd.FileName;
-			Text = sfd.FileName.Substring(sfd.FileName.LastIndexOf('\\') + 1) + " - Flyff ResEditor";
+			if (this._currentFile != null && this._currentPath != null)
+				sfd.FileName = Path.GetFileName(this._currentPath);
+
+			if (sfd.ShowDialog() == DialogResult.Cancel)
+				return false;
+
+			this._currentFile.Save(sfd.FileName);
+			this._currentPath = sfd.FileName;
+			//Text = sfd.FileName.Substring(sfd.FileName.LastIndexOf('\\') + 1) + " - Flyff ResEditor";
 			mniSave.Enabled = false;
 			tsbSave.Enabled = false;
 			this._dirty = false;
+
+			UpdateDisplay();
+
+			return true;
 		}
 
 		private void CloseFile()
 		{
-			if (this._dirty)
-			{
-				switch (MessageBox.Show("Do you want to save modifications ?", "Flyff ResEditor", MessageBoxButtons.YesNoCancel))
-				{
-					case DialogResult.Cancel:
-						return;
-					case DialogResult.Yes:
-						SaveAs();
-						break;
-				}
-			}
+			if (CheckDirty())
+				return;
 			mniSave.Enabled = false;
 			tsbSave.Enabled = false;
 			this._dirty = false;
-			this.resourceFile = null;
+			this._currentFile = null;
 			Text = "Flyff ResEditor";
 			this.fileList.Items.Clear();
 			this.mniClose.Enabled = false;
@@ -132,91 +148,64 @@ namespace ResEditor
 
 		private void Exit()
 		{
-			if (this._dirty)
-			{
-				switch (MessageBox.Show("Do you want to save modifications ?", "Flyff ResEditor", MessageBoxButtons.YesNoCancel))
-				{
-					case DialogResult.Cancel:
-						return;
-					case DialogResult.Yes:
-						SaveAs();
-						break;
-				}
-			}
+			if (CheckDirty())
+				return;
 			Environment.Exit(0);
 		}
 
 		private void AddFile()
 		{
-			this.openFileDialog1.Filter = "All Files|*.*";
-			this.openFileDialog1.Multiselect = true;
-			if (this.openFileDialog1.ShowDialog() == DialogResult.Cancel)
-			{
+			OpenFileDialog ofd = new OpenFileDialog();
+			ofd.Filter = "All Files|*.*";
+			ofd.Multiselect = true;
+			if (ofd.ShowDialog() == DialogResult.Cancel)
 				return;
-			}
-			if (this.resourceFile == null)
-			{
-				this.resourceFile = new ResourceFile();
-			}
-			string[] fileNames = this.openFileDialog1.FileNames;
+
+			if (this._currentFile == null)
+				this._currentFile = new ResourceFile();
+
+			string[] fileNames = ofd.FileNames;
 			foreach (string text in fileNames)
 			{
-				int num = -1;
-				bool flag = false;
-				if (this.resourceFile.Entries != null)
+				int existingIndex = -1;
+				bool cancel = false;
+
+				if (this._currentFile.Entries != null)
 				{
-					for (int j = 0; j < this.resourceFile.Entries.Length; j++)
+					for (int j = 0; j < this._currentFile.Entries.Length; j++)
 					{
-						if (this.resourceFile.Entries[j].FileName == text.Substring(text.LastIndexOf('\\') + 1))
+						if (this._currentFile.Entries[j].FileName == Path.GetFileName(text))
 						{
-							num = j;
+							existingIndex = j;
 						}
 					}
 				}
-				if (num >= 0)
+
+				if (existingIndex >= 0)
 				{
-					if (MessageBox.Show(this.resourceFile.Entries[num].FileName + "\nA file with the same name already exists. Do you want to replace it ?", "Flyff ResEditor", MessageBoxButtons.YesNo) == DialogResult.No)
+					if (MessageBox.Show(this._currentFile.Entries[existingIndex].FileName + "\nA file with the same name already exists. Do you want to replace it?", "Flyff ResEditor", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
 					{
-						flag = true;
+						cancel = true;
 					}
 					else
 					{
-						this.fileList.Items[num].Remove();
-						this.resourceFile.Remove(num);
+						this.fileList.Items[existingIndex].Remove();
+						this._currentFile.Remove(existingIndex);
 					}
 				}
-				if (!flag)
+
+				if (!cancel)
 				{
-					this.resourceFile.AddFile(text);
-					int num2;
-					switch (this.resourceFile.Entries[(int)this.resourceFile.Entries.LongLength - 1].FileName.Substring(this.resourceFile.Entries[(int)this.resourceFile.Entries.LongLength - 1].FileName.LastIndexOf('.') + 1))
-					{
-						case "inc":
-							num2 = 2;
-							break;
-						case "h":
-							num2 = 1;
-							break;
-						case "csv":
-							num2 = 3;
-							break;
-						case "txt":
-							num2 = 4;
-							break;
-						default:
-							num2 = 0;
-							break;
-					}
-					ListViewItem listViewItem = this.fileList.Items.Add(this.resourceFile.Entries[this.resourceFile.Entries.Length - 1].FileName);
-					listViewItem.SubItems.Add(GetSizeString(this.resourceFile.Entries[this.resourceFile.Entries.Length - 1].FileSize));
-					listViewItem.ImageIndex = num2;
-					this.fileList.Groups[num2].Items.Add(listViewItem);
+					this._currentFile.AddFile(text);
+
+					this.mniClose.Enabled = true;
+					mniSave.Enabled = true;
+					tsbSave.Enabled = true;
+					this._dirty = true;
+
+					UpdateDisplay();
 				}
 			}
-			this._dirty = true;
-			this.mniClose.Enabled = true;
-			mniSave.Enabled = true;
-			tsbSave.Enabled = true;
 		}
 
 		private void RemoveFile()
@@ -224,7 +213,7 @@ namespace ResEditor
 			foreach (int selectedIndex in this.fileList.SelectedIndices)
 			{
 				this.fileList.Items[selectedIndex].Remove();
-				this.resourceFile.Remove(selectedIndex);
+				this._currentFile.Remove(selectedIndex);
 			}
 			this._dirty = true;
 			mniSave.Enabled = true;
@@ -236,35 +225,19 @@ namespace ResEditor
 			if (this.fileList.SelectedItems.Count == 1)
 			{
 				string text = this.fileList.SelectedItems[0].Text;
-				switch (text.Substring(text.LastIndexOf('.') + 1))
-				{
-					case "inc":
-						this.saveFileDialog1.Filter = "Include Files (*.inc)|*.inc";
-						break;
-					case "h":
-						this.saveFileDialog1.Filter = "Header Files (*.h)|*.h";
-						break;
-					case "csv":
-						this.saveFileDialog1.Filter = "Comma Separated Value Files (*.csv)|*.csv";
-						break;
-					case "txt":
-						this.saveFileDialog1.Filter = "Text Files (*.txt)|*.txt";
-						break;
-					default:
-						this.saveFileDialog1.Filter = "All Files|*.*";
-						break;
-				}
+
+				this.saveFileDialog1.Filter = GetFilter(text);
 				this.saveFileDialog1.FileName = text;
 				if (this.saveFileDialog1.ShowDialog() != DialogResult.Cancel)
 				{
-					this.resourceFile.ExtractFile(this.fileList.SelectedIndices[0], this.saveFileDialog1.FileName);
+					this._currentFile.ExtractFile(this.fileList.SelectedIndices[0], this.saveFileDialog1.FileName);
 				}
 			}
 			else if (this.folderBrowserDialog1.ShowDialog() != DialogResult.Cancel)
 			{
 				foreach (int selectedIndex in this.fileList.SelectedIndices)
 				{
-					this.resourceFile.ExtractFile(selectedIndex, this.folderBrowserDialog1.SelectedPath + "\\" + this.resourceFile.Entries[selectedIndex].FileName);
+					this._currentFile.ExtractFile(selectedIndex, this.folderBrowserDialog1.SelectedPath + "\\" + this._currentFile.Entries[selectedIndex].FileName);
 				}
 			}
 		}
@@ -276,11 +249,11 @@ namespace ResEditor
 
 		private void OnDragShortcut()
 		{
-			if (this.resourceFile != null)
+			if (this._currentFile != null)
 			{
-				string path = Path.GetTempPath() + "\\FlyffResEditor\\" + ((this.resourceFile.Path == null) ? "NewRes.res" : this.resourceFile.Path.Substring(this.resourceFile.Path.LastIndexOf('\\') + 1));
+				string path = Path.GetTempPath() + "\\FlyffResEditor\\" + ((this._currentPath == null) ? "NewRes.res" : Path.GetFileName(this._currentPath));
 
-				this.resourceFile.Save(path);
+				this._currentFile.Save(path);
 				DoDragDrop(new DataObject(DataFormats.FileDrop, new[] { path }), DragDropEffects.Copy | DragDropEffects.Move);
 			}
 		}
@@ -291,79 +264,27 @@ namespace ResEditor
 			if (this.args.Length <= 0 || !File.Exists(this.args[0]))
 				return;
 
-			this.resourceFile = new ResourceFile(this.args[0]);
-			this.resourceFile.Path = this.args[0];
-			Text = this.resourceFile.Path.Substring(this.resourceFile.Path.LastIndexOf('\\') + 1) + " - Flyff ResEditor";
-			for (int i = 0; i < this.resourceFile.Entries.Length; i++)
-			{
-				string text = this.resourceFile.Entries[i].FileName;
-				int num;
-				switch (text.Substring(text.LastIndexOf('.') + 1))
-				{
-					case "inc":
-						num = 2;
-						break;
-					case "h":
-						num = 1;
-						break;
-					case "csv":
-						num = 3;
-						break;
-					case "txt":
-						num = 4;
-						break;
-					default:
-						num = 0;
-						break;
-				}
-				ListViewItem listViewItem = this.fileList.Items.Add(this.resourceFile.Entries[i].FileName);
-				listViewItem.SubItems.Add(GetSizeString(this.resourceFile.Entries[i].FileSize));
-				listViewItem.ImageIndex = num;
-				this.fileList.Groups[num].Items.Add(listViewItem);
-			}
-			this.mniClose.Enabled = true;
-			this._dirty = false;
+			Open(this.args[0]);
+
+			UpdateDisplay();
 		}
 
 		private bool OnAppClosing()
 		{
-			if (this._dirty)
-			{
-				switch (MessageBox.Show("Do you want to save modifications ?", "Flyff ResEditor", MessageBoxButtons.YesNoCancel))
-				{
-					case DialogResult.Yes:
-						SaveAs();
-						return true;
-					case DialogResult.Cancel:
-						return false;
-				}
-			}
-
-			return true;
+			return !CheckDirty();
 		}
 
 		private void OnSelectFile()
 		{
-			if (this.fileList.SelectedItems.Count == 0)
-			{
-				tsbRemove.Enabled = false;
-				tsbExtract.Enabled = false;
-				mniRemove.Enabled = false;
-				mniExtract.Enabled = false;
-				this.mniContextExtract.Enabled = false;
-				mniContextRemove.Enabled = false;
-				mniContextAdd.Enabled = true;
-			}
-			else
-			{
-				tsbRemove.Enabled = true;
-				tsbExtract.Enabled = true;
-				mniRemove.Enabled = true;
-				mniExtract.Enabled = true;
-				this.mniContextExtract.Enabled = true;
-				mniContextRemove.Enabled = true;
-				mniContextAdd.Enabled = false;
-			}
+			bool hasEntries = this.fileList.SelectedItems.Count > 0;
+
+			tsbRemove.Enabled = hasEntries;
+			tsbExtract.Enabled = hasEntries;
+			mniRemove.Enabled = hasEntries;
+			mniExtract.Enabled = hasEntries;
+			this.mniContextExtract.Enabled = hasEntries;
+			mniContextRemove.Enabled = hasEntries;
+			mniContextAdd.Enabled = !hasEntries;
 		}
 
 		private void OnItemDrag()
@@ -373,9 +294,10 @@ namespace ResEditor
 				string[] array = new string[this.fileList.SelectedItems.Count];
 				for (int i = 0; i < this.fileList.SelectedItems.Count; i++)
 				{
-					array[i] = Path.GetTempPath() + "\\FlyffResEditor\\" + this.resourceFile.Entries[this.fileList.SelectedIndices[i]].FileName;
-					this.resourceFile.ExtractFile(this.fileList.SelectedIndices[i], array[i]);
+					array[i] = Path.GetTempPath() + "\\FlyffResEditor\\" + this._currentFile.Entries[this.fileList.SelectedIndices[i]].FileName;
+					this._currentFile.ExtractFile(this.fileList.SelectedIndices[i], array[i]);
 				}
+
 				DoDragDrop(new DataObject(DataFormats.FileDrop, array), DragDropEffects.Copy | DragDropEffects.Move);
 			}
 		}
@@ -387,21 +309,22 @@ namespace ResEditor
 
 		private void OnFileDragged(IDataObject data)
 		{
-			if (this.resourceFile == null)
+			if (this._currentFile == null)
 			{
-				this.resourceFile = new ResourceFile();
+				this._currentFile = new ResourceFile();
 			}
+
 			string[] array = (string[])data.GetData(DataFormats.FileDrop, false);
 			string[] array2 = array;
 			foreach (string text in array2)
 			{
 				int num = -1;
 				bool flag = false;
-				if (this.resourceFile.Entries != null)
+				if (this._currentFile.Entries != null)
 				{
-					for (int j = 0; j < this.resourceFile.Entries.Length; j++)
+					for (int j = 0; j < this._currentFile.Entries.Length; j++)
 					{
-						if (this.resourceFile.Entries[j].FileName == text.Substring(text.LastIndexOf('\\') + 1))
+						if (this._currentFile.Entries[j].FileName == text.Substring(text.LastIndexOf('\\') + 1))
 						{
 							num = j;
 						}
@@ -409,48 +332,65 @@ namespace ResEditor
 				}
 				if (num >= 0)
 				{
-					if (MessageBox.Show(this.resourceFile.Entries[num].FileName + "\nA file with the same name already exists. Do you want to replace it ?", "Flyff ResEditor", MessageBoxButtons.YesNo) == DialogResult.No)
+					if (MessageBox.Show(this._currentFile.Entries[num].FileName + "\nA file with the same name already exists. Do you want to replace it ?", "Flyff ResEditor", MessageBoxButtons.YesNo) == DialogResult.No)
 					{
 						flag = true;
 					}
 					else
 					{
 						this.fileList.Items[num].Remove();
-						this.resourceFile.Remove(num);
+						this._currentFile.Remove(num);
 					}
 				}
 				if (!flag)
 				{
-					this.resourceFile.AddFile(text);
-					int num2;
-					switch (this.resourceFile.Entries[(int)this.resourceFile.Entries.LongLength - 1].FileName.Substring(this.resourceFile.Entries[(int)this.resourceFile.Entries.LongLength - 1].FileName.LastIndexOf('.') + 1))
-					{
-						case "inc":
-							num2 = 2;
-							break;
-						case "h":
-							num2 = 1;
-							break;
-						case "csv":
-							num2 = 3;
-							break;
-						case "txt":
-							num2 = 4;
-							break;
-						default:
-							num2 = 0;
-							break;
-					}
-					ListViewItem listViewItem = this.fileList.Items.Add(this.resourceFile.Entries[this.resourceFile.Entries.Length - 1].FileName);
-					listViewItem.SubItems.Add(GetSizeString(this.resourceFile.Entries[this.resourceFile.Entries.Length - 1].FileSize));
-					listViewItem.ImageIndex = num2;
-					this.fileList.Groups[num2].Items.Add(listViewItem);
+					this._currentFile.AddFile(text);
+					int imgIndex = GetImageIndex(this._currentFile.Entries[(int)this._currentFile.Entries.LongLength - 1].FileName);
+					ListViewItem listViewItem = this.fileList.Items.Add(this._currentFile.Entries[this._currentFile.Entries.Length - 1].FileName);
+					listViewItem.SubItems.Add(GetSizeString(this._currentFile.Entries[this._currentFile.Entries.Length - 1].FileSize));
+					listViewItem.ImageIndex = imgIndex;
+					this.fileList.Groups[imgIndex].Items.Add(listViewItem);
 				}
 			}
+
 			this._dirty = true;
 			this.mniClose.Enabled = true;
 			mniSave.Enabled = true;
 			tsbSave.Enabled = true;
+		}
+
+		private int GetImageIndex(string filename)
+		{
+			switch (Path.GetExtension(filename))
+			{
+				case "h":
+					return 1;
+				case "inc":
+					return 2;
+				case "csv":
+					return 3;
+				case "txt":
+					return 4;
+				default:
+					return 0;
+			}
+		}
+
+		private string GetFilter(string filename)
+		{
+			switch (Path.GetExtension(filename))
+			{
+				case "inc":
+					return "Include Files (*.inc)|*.inc";
+				case "h":
+					return "Header Files (*.h)|*.h";
+				case "csv":
+					return "Comma Separated Value Files (*.csv)|*.csv";
+				case "txt":
+					return "Text Files (*.txt)|*.txt";
+				default:
+					return "All Files|*.*";
+			}
 		}
 
 		private string GetSizeString(long size)
@@ -484,6 +424,8 @@ namespace ResEditor
 			}
 			return (Math.Round((double)(100 * size / (int)Math.Pow(1024.0, num))) / 100.0).ToString() + str;
 		}
+
+		#region Event Handlers
 
 		private void MniNew_Click(object A_0, EventArgs A_1)
 		{
@@ -617,5 +559,7 @@ namespace ResEditor
 			if (e.Button == MouseButtons.Left)
 				OnDragShortcut();
 		}
+
+		#endregion
 	}
 }

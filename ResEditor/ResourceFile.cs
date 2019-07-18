@@ -66,6 +66,8 @@ namespace ResEditor
 		/// <param name="path">The path of the resource file to open</param>
 		public ResourceFile(string path)
 		{
+			Path = path;
+
 			// Read in all the bytes
 			FileStream fileStream = new FileStream(path, FileMode.Open);
 			byte[] buffer = new byte[fileStream.Length];
