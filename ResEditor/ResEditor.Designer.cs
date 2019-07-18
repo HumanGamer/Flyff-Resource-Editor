@@ -29,11 +29,11 @@ namespace ResEditor
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Autres", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Fichiers header (*.h)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Fichiers include (*.inc)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("Fichiers base de donnée CSV (*.csv)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Fichiers texte (*.txt)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Miscellaneous Files", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Header Files (*.h)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Include Files (*.inc)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("Comma Separated Value Files (*.csv)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Text Files (*.txt)", System.Windows.Forms.HorizontalAlignment.Left);
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ResEditor));
 			this.fileList = new System.Windows.Forms.ListView();
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -94,15 +94,15 @@ namespace ResEditor
             this.columnHeader1,
             this.columnHeader2});
 			this.fileList.ContextMenuStrip = this.fileContext;
-			listViewGroup1.Header = "Autres";
+			listViewGroup1.Header = "Miscellaneous Files";
 			listViewGroup1.Name = "other_files";
-			listViewGroup2.Header = "Fichiers header (*.h)";
+			listViewGroup2.Header = "Header Files (*.h)";
 			listViewGroup2.Name = "h_files";
-			listViewGroup3.Header = "Fichiers include (*.inc)";
+			listViewGroup3.Header = "Include Files (*.inc)";
 			listViewGroup3.Name = "inc_files";
-			listViewGroup4.Header = "Fichiers base de donnée CSV (*.csv)";
+			listViewGroup4.Header = "Comma Separated Value Files (*.csv)";
 			listViewGroup4.Name = "csv_files";
-			listViewGroup5.Header = "Fichiers texte (*.txt)";
+			listViewGroup5.Header = "Text Files (*.txt)";
 			listViewGroup5.Name = "txt_files";
 			this.fileList.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
             listViewGroup1,
