@@ -131,34 +131,34 @@ namespace ResEditor
             this.toolStripSeparator7,
             this.mniContextExtract});
 			this.mnuContext.Name = "fileContext";
-			this.mnuContext.Size = new System.Drawing.Size(188, 76);
+			this.mnuContext.Size = new System.Drawing.Size(118, 76);
 			// 
 			// mniContextAdd
 			// 
 			this.mniContextAdd.Name = "mniContextAdd";
-			this.mniContextAdd.Size = new System.Drawing.Size(187, 22);
-			this.mniContextAdd.Text = "Add a file...";
+			this.mniContextAdd.Size = new System.Drawing.Size(117, 22);
+			this.mniContextAdd.Text = "Add";
 			this.mniContextAdd.Click += new System.EventHandler(this.MniContextAdd_Click);
 			// 
 			// mniContextRemove
 			// 
 			this.mniContextRemove.Enabled = false;
 			this.mniContextRemove.Name = "mniContextRemove";
-			this.mniContextRemove.Size = new System.Drawing.Size(187, 22);
-			this.mniContextRemove.Text = "Remove selected files";
+			this.mniContextRemove.Size = new System.Drawing.Size(117, 22);
+			this.mniContextRemove.Text = "Remove";
 			this.mniContextRemove.Click += new System.EventHandler(this.MniContextRemove_Click);
 			// 
 			// toolStripSeparator7
 			// 
 			this.toolStripSeparator7.Name = "toolStripSeparator7";
-			this.toolStripSeparator7.Size = new System.Drawing.Size(184, 6);
+			this.toolStripSeparator7.Size = new System.Drawing.Size(114, 6);
 			// 
 			// mniContextExtract
 			// 
 			this.mniContextExtract.Enabled = false;
 			this.mniContextExtract.Name = "mniContextExtract";
-			this.mniContextExtract.Size = new System.Drawing.Size(187, 22);
-			this.mniContextExtract.Text = "Extract selected files";
+			this.mniContextExtract.Size = new System.Drawing.Size(117, 22);
+			this.mniContextExtract.Text = "Extract";
 			this.mniContextExtract.Click += new System.EventHandler(this.MniContextExtract_Click);
 			// 
 			// imlMain
@@ -263,7 +263,7 @@ namespace ResEditor
 			// mniAdd
 			// 
 			this.mniAdd.Name = "mniAdd";
-			this.mniAdd.Size = new System.Drawing.Size(180, 22);
+			this.mniAdd.Size = new System.Drawing.Size(117, 22);
 			this.mniAdd.Text = "Add";
 			this.mniAdd.Click += new System.EventHandler(this.MniAdd_Click);
 			// 
@@ -271,20 +271,20 @@ namespace ResEditor
 			// 
 			this.mniRemove.Enabled = false;
 			this.mniRemove.Name = "mniRemove";
-			this.mniRemove.Size = new System.Drawing.Size(180, 22);
+			this.mniRemove.Size = new System.Drawing.Size(117, 22);
 			this.mniRemove.Text = "Remove";
 			this.mniRemove.Click += new System.EventHandler(this.MniRemove_Click);
 			// 
 			// toolStripSeparator6
 			// 
 			this.toolStripSeparator6.Name = "toolStripSeparator6";
-			this.toolStripSeparator6.Size = new System.Drawing.Size(177, 6);
+			this.toolStripSeparator6.Size = new System.Drawing.Size(114, 6);
 			// 
 			// mniExtract
 			// 
 			this.mniExtract.Enabled = false;
 			this.mniExtract.Name = "mniExtract";
-			this.mniExtract.Size = new System.Drawing.Size(180, 22);
+			this.mniExtract.Size = new System.Drawing.Size(117, 22);
 			this.mniExtract.Text = "Extract";
 			this.mniExtract.Click += new System.EventHandler(this.MniExtract_Click);
 			// 
@@ -299,7 +299,7 @@ namespace ResEditor
 			// mniAbout
 			// 
 			this.mniAbout.Name = "mniAbout";
-			this.mniAbout.Size = new System.Drawing.Size(180, 22);
+			this.mniAbout.Size = new System.Drawing.Size(107, 22);
 			this.mniAbout.Text = "About";
 			this.mniAbout.Click += new System.EventHandler(this.MniAbout_Click);
 			// 
