@@ -214,22 +214,22 @@ namespace ResEditor
 			}
 
 			// Create a new binary reader for the decrypted data
-			BinaryReader br2 = new BinaryReader(new MemoryStream(array));
+			BinaryReader brDecrypted = new BinaryReader(new MemoryStream(array));
 
 			// Skip the first 7 bytes
-			br2.ReadBytes(7);
+			brDecrypted.ReadBytes(7);
 
 			// Read in the file entries
-			short count = br2.ReadInt16();
+			short count = brDecrypted.ReadInt16();
 			for (int i = 0; i < count; i++)
 			{
-				string name = Encoding.ASCII.GetString(br2.ReadBytes(br2.ReadInt16()));
-				int size = br2.ReadInt32();
-				int time = br2.ReadInt32();
-				int offset = br2.ReadInt32();
+				string name = Encoding.ASCII.GetString(brDecrypted.ReadBytes(brDecrypted.ReadInt16()));
+				int size = brDecrypted.ReadInt32();
+				int time = brDecrypted.ReadInt32();
+				int offset = brDecrypted.ReadInt32();
 				_entries.Add(new ResourceEntry(name, size, null, time, offset));
 			}
-			br2.Close();
+			brDecrypted.Close();
 
 			// Read the entry data
 			for (int i = 0; i < _entries.Count; i++)
