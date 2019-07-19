@@ -100,9 +100,12 @@ namespace ResEditor
 		/// <param name="path">The path to extract the file to</param>
 		public void ExtractFile(int index, string path)
 		{
-			FileStream fileStream = new FileStream(path, FileMode.Create);
-			fileStream.Write(_entries[index].Data, 0, _entries[index].FileSize);
-			fileStream.Close();
+			var entry = _entries[index];
+
+			using (Stream s = new FileStream(path, FileMode.Create))
+			{
+				s.Write(entry.Data, 0, entry.FileSize);
+			}
 		}
 
 		/// <summary>
@@ -114,12 +117,9 @@ namespace ResEditor
 			int existingIndex = IndexOf(Path.GetFileName(path));
 
 			// Read in all the bytes
-			FileStream fileStream = new FileStream(path, FileMode.Open);
-			byte[] array = new byte[fileStream.Length];
-			fileStream.Read(array, 0, (int)fileStream.Length);
-			fileStream.Close();
+			byte[] data = File.ReadAllBytes(path);
 
-			ResourceEntry entry = new ResourceEntry(Path.GetFileName(path), array.Length, array);
+			ResourceEntry entry = new ResourceEntry(Path.GetFileName(path), data.Length, data);
 
 			if (existingIndex >= 0)
 				_entries[existingIndex] = entry;
@@ -199,65 +199,65 @@ namespace ResEditor
 		/// </summary>
 		private void Read()
 		{
-			// Read in all the bytes
-			FileStream fileStream = new FileStream(FilePath, FileMode.Open);
-			byte[] buffer = new byte[fileStream.Length];
-			fileStream.Read(buffer, 0, (int)fileStream.Length);
-			fileStream.Close();
-
 			// Create a binary reader for the file's bytes
-			BinaryReader br = new BinaryReader(new MemoryStream(buffer));
-
-			// Read header
-			this._encryptionKey = br.ReadByte();
-			this._encrypted = br.ReadByte();
-
-			// Read data
-			byte[] array = br.ReadBytes(br.ReadInt32());
-
-			// Decrypt the file headers
-			for (int i = 0; i < array.Length; i++)
+			using (Stream ms = File.OpenRead(FilePath))
+			using (BinaryReader br = new BinaryReader(ms))
 			{
-				array[i] = (byte)((16 * (this._encryptionKey ^ (byte)(~array[i]))) | ((this._encryptionKey ^ (byte)(~array[i])) >> 4));
-			}
+				// Read header
+				this._encryptionKey = br.ReadByte();
+				this._encrypted = br.ReadByte();
 
-			// Create a new binary reader for the decrypted data
-			BinaryReader brDecrypted = new BinaryReader(new MemoryStream(array));
+				// Read data
+				byte[] array = br.ReadBytes(br.ReadInt32());
 
-			// Skip the first 7 bytes
-			brDecrypted.ReadBytes(7);
-
-			// Read in the file entries
-			short count = brDecrypted.ReadInt16();
-			for (int i = 0; i < count; i++)
-			{
-				string name = Encoding.ASCII.GetString(brDecrypted.ReadBytes(brDecrypted.ReadInt16()));
-				int size = brDecrypted.ReadInt32();
-				int time = brDecrypted.ReadInt32();
-				int offset = brDecrypted.ReadInt32();
-				_entries.Add(new ResourceEntry(name, size, null, time, offset));
-			}
-			brDecrypted.Close();
-
-			// Read the entry data
-			for (int i = 0; i < _entries.Count; i++)
-			{
-				ResourceEntry entry = _entries[i];
-				br.BaseStream.Seek(entry.FileOffset, SeekOrigin.Begin);
-
-				entry.Data = br.ReadBytes(entry.FileSize);
-
-				// If the data is encrypted, then we need to decrypt it...
-				if (this._encrypted == 1)
+				// Decrypt the file headers
+				for (int i = 0; i < array.Length; i++)
 				{
-					for (int j = 0; j < _entries[i].FileSize; j++)
+					array[i] = (byte)((16 * (this._encryptionKey ^ (byte)(~array[i]))) | ((this._encryptionKey ^ (byte)(~array[i])) >> 4));
+				}
+
+				// Create a new binary reader for the decrypted header
+				using (MemoryStream msHeader = new MemoryStream(array))
+				using (BinaryReader brHeader = new BinaryReader(msHeader))
+				{
+					// Skip the first 7 bytes
+					brHeader.ReadBytes(7);
+
+					// Read in the file entries
+					short count = brHeader.ReadInt16();
+					for (int i = 0; i < count; i++)
 					{
-						entry.Data[j] = (byte)((16 * (this._encryptionKey ^ (byte)(~entry.Data[j]))) | ((this._encryptionKey ^ (byte)(~entry.Data[j])) >> 4));
+						string name = Encoding.ASCII.GetString(brHeader.ReadBytes(brHeader.ReadInt16()));
+						int size = brHeader.ReadInt32();
+						int time = brHeader.ReadInt32();
+						int offset = brHeader.ReadInt32();
+
+						_entries.Add(new ResourceEntry(name, size, null, time, offset));
 					}
 				}
-				_entries[i] = entry;
+
+				// Read the entry data
+				for (int i = 0; i < _entries.Count; i++)
+				{
+					ResourceEntry entry = _entries[i];
+
+					// Go to the entry offset
+					br.BaseStream.Seek(entry.FileOffset, SeekOrigin.Begin);
+
+					// Read the entry data
+					entry.Data = br.ReadBytes(entry.FileSize);
+
+					// If the data is encrypted, then we need to decrypt it...
+					if (this._encrypted == 1)
+					{
+						for (int j = 0; j < _entries[i].FileSize; j++)
+						{
+							entry.Data[j] = (byte)((16 * (this._encryptionKey ^ (byte)(~entry.Data[j]))) | ((this._encryptionKey ^ (byte)(~entry.Data[j])) >> 4));
+						}
+					}
+					_entries[i] = entry;
+				}
 			}
-			br.Close();
 		}
 
 		/// <summary>
