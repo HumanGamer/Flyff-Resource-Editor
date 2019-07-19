@@ -29,11 +29,11 @@ namespace ResEditor
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.ListViewGroup listViewGroup6 = new System.Windows.Forms.ListViewGroup("Miscellaneous Files", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup7 = new System.Windows.Forms.ListViewGroup("Header Files (*.h)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup8 = new System.Windows.Forms.ListViewGroup("Include Files (*.inc)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup9 = new System.Windows.Forms.ListViewGroup("Comma Separated Value Files (*.csv)", System.Windows.Forms.HorizontalAlignment.Left);
-			System.Windows.Forms.ListViewGroup listViewGroup10 = new System.Windows.Forms.ListViewGroup("Text Files (*.txt)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Miscellaneous Files", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Header Files (*.h)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Include Files (*.inc)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("Comma Separated Value Files (*.csv)", System.Windows.Forms.HorizontalAlignment.Left);
+			System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Text Files (*.txt)", System.Windows.Forms.HorizontalAlignment.Left);
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ResEditor));
 			this.fileList = new System.Windows.Forms.ListView();
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -44,9 +44,6 @@ namespace ResEditor
 			this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
 			this.mniContextExtract = new System.Windows.Forms.ToolStripMenuItem();
 			this.imlMain = new System.Windows.Forms.ImageList(this.components);
-			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-			this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-			this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
 			this.mnuMain = new System.Windows.Forms.MenuStrip();
 			this.mniFile = new System.Windows.Forms.ToolStripMenuItem();
 			this.mniNew = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,8 +52,6 @@ namespace ResEditor
 			this.mniSave = new System.Windows.Forms.ToolStripMenuItem();
 			this.mniSaveAs = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-			this.mniClose = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.mniExit = new System.Windows.Forms.ToolStripMenuItem();
 			this.mniActions = new System.Windows.Forms.ToolStripMenuItem();
 			this.mniAdd = new System.Windows.Forms.ToolStripMenuItem();
@@ -94,22 +89,22 @@ namespace ResEditor
             this.columnHeader1,
             this.columnHeader2});
 			this.fileList.ContextMenuStrip = this.mnuContext;
-			listViewGroup6.Header = "Miscellaneous Files";
-			listViewGroup6.Name = "other_files";
-			listViewGroup7.Header = "Header Files (*.h)";
-			listViewGroup7.Name = "h_files";
-			listViewGroup8.Header = "Include Files (*.inc)";
-			listViewGroup8.Name = "inc_files";
-			listViewGroup9.Header = "Comma Separated Value Files (*.csv)";
-			listViewGroup9.Name = "csv_files";
-			listViewGroup10.Header = "Text Files (*.txt)";
-			listViewGroup10.Name = "txt_files";
+			listViewGroup1.Header = "Miscellaneous Files";
+			listViewGroup1.Name = "other_files";
+			listViewGroup2.Header = "Header Files (*.h)";
+			listViewGroup2.Name = "h_files";
+			listViewGroup3.Header = "Include Files (*.inc)";
+			listViewGroup3.Name = "inc_files";
+			listViewGroup4.Header = "Comma Separated Value Files (*.csv)";
+			listViewGroup4.Name = "csv_files";
+			listViewGroup5.Header = "Text Files (*.txt)";
+			listViewGroup5.Name = "txt_files";
 			this.fileList.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup6,
-            listViewGroup7,
-            listViewGroup8,
-            listViewGroup9,
-            listViewGroup10});
+            listViewGroup1,
+            listViewGroup2,
+            listViewGroup3,
+            listViewGroup4,
+            listViewGroup5});
 			this.fileList.HideSelection = false;
 			this.fileList.LargeImageList = this.imlMain;
 			this.fileList.Location = new System.Drawing.Point(-1, 49);
@@ -176,15 +171,6 @@ namespace ResEditor
 			this.imlMain.Images.SetKeyName(3, "csv.ico");
 			this.imlMain.Images.SetKeyName(4, "txt.ico");
 			// 
-			// folderBrowserDialog1
-			// 
-			this.folderBrowserDialog1.Description = "Veuillez sélectionner le dossier dans lequel les fichiers précedements sélectionn" +
-    "és seront extraits";
-			// 
-			// openFileDialog1
-			// 
-			this.openFileDialog1.FileName = "openFileDialog1";
-			// 
 			// mnuMain
 			// 
 			this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -207,8 +193,6 @@ namespace ResEditor
             this.mniSave,
             this.mniSaveAs,
             this.toolStripSeparator3,
-            this.mniClose,
-            this.toolStripSeparator1,
             this.mniExit});
 			this.mniFile.Name = "mniFile";
 			this.mniFile.Size = new System.Drawing.Size(37, 20);
@@ -218,7 +202,7 @@ namespace ResEditor
 			// 
 			this.mniNew.Name = "mniNew";
 			this.mniNew.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-			this.mniNew.Size = new System.Drawing.Size(155, 22);
+			this.mniNew.Size = new System.Drawing.Size(184, 22);
 			this.mniNew.Text = "New";
 			this.mniNew.Click += new System.EventHandler(this.MniNew_Click);
 			// 
@@ -226,21 +210,21 @@ namespace ResEditor
 			// 
 			this.mniOpen.Name = "mniOpen";
 			this.mniOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-			this.mniOpen.Size = new System.Drawing.Size(155, 22);
+			this.mniOpen.Size = new System.Drawing.Size(184, 22);
 			this.mniOpen.Text = "Open...";
 			this.mniOpen.Click += new System.EventHandler(this.MniOpen_Click);
 			// 
 			// toolStripSeparator2
 			// 
 			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
+			this.toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
 			// 
 			// mniSave
 			// 
 			this.mniSave.Enabled = false;
 			this.mniSave.Name = "mniSave";
 			this.mniSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-			this.mniSave.Size = new System.Drawing.Size(155, 22);
+			this.mniSave.Size = new System.Drawing.Size(184, 22);
 			this.mniSave.Text = "Save";
 			this.mniSave.Click += new System.EventHandler(this.MniSave_Click);
 			// 
@@ -256,25 +240,12 @@ namespace ResEditor
 			// toolStripSeparator3
 			// 
 			this.toolStripSeparator3.Name = "toolStripSeparator3";
-			this.toolStripSeparator3.Size = new System.Drawing.Size(152, 6);
-			// 
-			// mniClose
-			// 
-			this.mniClose.Enabled = false;
-			this.mniClose.Name = "mniClose";
-			this.mniClose.Size = new System.Drawing.Size(155, 22);
-			this.mniClose.Text = "Close";
-			this.mniClose.Click += new System.EventHandler(this.MniClose_Click);
-			// 
-			// toolStripSeparator1
-			// 
-			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(152, 6);
+			this.toolStripSeparator3.Size = new System.Drawing.Size(181, 6);
 			// 
 			// mniExit
 			// 
 			this.mniExit.Name = "mniExit";
-			this.mniExit.Size = new System.Drawing.Size(155, 22);
+			this.mniExit.Size = new System.Drawing.Size(184, 22);
 			this.mniExit.Text = "Exit";
 			this.mniExit.Click += new System.EventHandler(this.MniExit_Click);
 			// 
@@ -307,7 +278,7 @@ namespace ResEditor
 			// toolStripSeparator6
 			// 
 			this.toolStripSeparator6.Name = "toolStripSeparator6";
-			this.toolStripSeparator6.Size = new System.Drawing.Size(186, 6);
+			this.toolStripSeparator6.Size = new System.Drawing.Size(177, 6);
 			// 
 			// mniExtract
 			// 
@@ -328,7 +299,7 @@ namespace ResEditor
 			// mniAbout
 			// 
 			this.mniAbout.Name = "mniAbout";
-			this.mniAbout.Size = new System.Drawing.Size(107, 22);
+			this.mniAbout.Size = new System.Drawing.Size(180, 22);
 			this.mniAbout.Text = "About";
 			this.mniAbout.Click += new System.EventHandler(this.MniAbout_Click);
 			// 
@@ -346,7 +317,7 @@ namespace ResEditor
 			// toolStripStatusLabel2
 			// 
 			this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-			this.toolStripStatusLabel2.Size = new System.Drawing.Size(478, 17);
+			this.toolStripStatusLabel2.Size = new System.Drawing.Size(534, 17);
 			this.toolStripStatusLabel2.Spring = true;
 			// 
 			// toolStripStatusLabel1
@@ -493,14 +464,10 @@ namespace ResEditor
 		private System.Windows.Forms.ImageList imlMain;
 		private System.Windows.Forms.ContextMenuStrip mnuContext;
 		private System.Windows.Forms.ToolStripMenuItem mniContextExtract;
-		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
-		private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-		private System.Windows.Forms.OpenFileDialog openFileDialog1;
 		private System.Windows.Forms.MenuStrip mnuMain;
 		private System.Windows.Forms.ToolStripMenuItem mniFile;
 		private System.Windows.Forms.ToolStripMenuItem mniOpen;
 		private System.Windows.Forms.ToolStripMenuItem mniActions;
-		private System.Windows.Forms.ToolStripMenuItem mniClose;
 		private System.Windows.Forms.ToolStripMenuItem mniExit;
 		private System.Windows.Forms.ToolStripMenuItem mniNew;
 		private System.Windows.Forms.StatusStrip stsMain;
@@ -510,7 +477,6 @@ namespace ResEditor
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
 		private System.Windows.Forms.ToolStripMenuItem mniSave;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 		private System.Windows.Forms.ToolStrip tspMain;
 		private System.Windows.Forms.ToolStripButton tsbNew;
 		private System.Windows.Forms.ToolStripButton tsbOpen;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -38,6 +39,23 @@ namespace ResEditor
 			/// The contents of the entry file
 			/// </summary>
 			public byte[] Data;
+
+			/// <summary>
+			/// Creates a new ResourceEntry instance
+			/// </summary>
+			/// <param name="fileName">Name of the file</param>
+			/// <param name="fileSize">Size of the file in bytes</param>
+			/// <param name="data">Contents of the file</param>
+			/// <param name="time">File creation/modify time</param>
+			/// <param name="fileOffset">Offset of the file in the resource</param>
+			public ResourceEntry(string fileName, int fileSize, byte[] data = null, int time = 0, int fileOffset = 0)
+			{
+				FileName = fileName;
+				FileSize = fileSize;
+				Data = data;
+				Time = time;
+				FileOffset = fileOffset;
+			}
 		}
 
 		/// <summary>
@@ -53,23 +71,128 @@ namespace ResEditor
 		/// <summary>
 		/// List of Resource Entries in the file
 		/// </summary>
-		public ResourceEntry[] Entries;
+		private List<ResourceEntry> _entries;
 
 		/// <summary>
 		/// Path of the resource file
 		/// </summary>
-		public string Path;
+		public string FilePath;
+
+		/// <summary>
+		/// Initializes an empty resource file
+		/// </summary>
+		public ResourceFile()
+		{
+			_entries = new List<ResourceEntry>();
+			this._encryptionKey = (byte)new Random().Next(255);
+			this._encrypted = 0;
+		}
+
+		/// <summary>
+		/// Extracts the file at the specified index
+		/// </summary>
+		/// <param name="index">The index of the file</param>
+		/// <param name="path">The path to extract the file to</param>
+		public void ExtractFile(int index, string path)
+		{
+			FileStream fileStream = new FileStream(path, FileMode.Create);
+			fileStream.Write(_entries[index].Data, 0, _entries[index].FileSize);
+			fileStream.Close();
+		}
+
+		/// <summary>
+		/// Adds a file to the resource
+		/// </summary>
+		/// <param name="path">The path of the file to add</param>
+		public void AddFile(string path)
+		{
+			int existingIndex = IndexOf(Path.GetFileName(path));
+
+			// Read in all the bytes
+			FileStream fileStream = new FileStream(path, FileMode.Open);
+			byte[] array = new byte[fileStream.Length];
+			fileStream.Read(array, 0, (int)fileStream.Length);
+			fileStream.Close();
+
+			ResourceEntry entry = new ResourceEntry(Path.GetFileName(path), array.Length, array);
+
+			if (existingIndex >= 0)
+				_entries[existingIndex] = entry;
+			else
+				_entries.Add(entry);
+		}
+
+		/// <summary>
+		/// Removes the entry at the specified index
+		/// </summary>
+		/// <param name="index"></param>
+		public void Remove(int index)
+		{
+			_entries.RemoveAt(index);
+		}
+
+		public int Count => _entries.Count;
+
+		public ResourceEntry this[int index]
+		{
+			get
+			{
+				return _entries[index];
+			}
+			set
+			{
+				_entries[index] = value;
+			}
+		}
+
+		/// <summary>
+		/// Gets the index of the specified file name in this resource
+		/// </summary>
+		/// <param name="name">The name of the file</param>
+		/// <returns>The index of the specified file name or -1 if the file was not found.</returns>
+		public int IndexOf(string name)
+		{
+			for(int i = 0; i < Count; i++)
+			{
+				if (this[i].FileName == name)
+					return i;
+			}
+
+			return -1;
+		}
+
+		/// <summary>
+		/// Gets whether or not there is a file of the specified name in this resource
+		/// </summary>
+		/// <param name="name">The name of the file</param>
+		/// <returns>True if the file is was found, otherwise false.</returns>
+		public bool Contains(string name)
+		{
+			return IndexOf(name) != -1;
+		}
 
 		/// <summary>
 		/// Opens the resource file at the specified path
 		/// </summary>
 		/// <param name="path">The path of the resource file to open</param>
-		public ResourceFile(string path)
+		/// <returns>The loaded resource file</returns>
+		public static ResourceFile Open(string path)
 		{
-			Path = path;
+			ResourceFile result = new ResourceFile();
+			result.FilePath = path;
 
+			result.Read();
+
+			return result;
+		}
+
+		/// <summary>
+		/// Reads the resource file from the file system
+		/// </summary>
+		private void Read()
+		{
 			// Read in all the bytes
-			FileStream fileStream = new FileStream(path, FileMode.Open);
+			FileStream fileStream = new FileStream(FilePath, FileMode.Open);
 			byte[] buffer = new byte[fileStream.Length];
 			fileStream.Read(buffer, 0, (int)fileStream.Length);
 			fileStream.Close();
@@ -97,116 +220,36 @@ namespace ResEditor
 			br2.ReadBytes(7);
 
 			// Read in the file entries
-			Entries = new ResourceEntry[br2.ReadInt16()];
-			for (int i = 0; i < Entries.Length; i++)
+			short count = br2.ReadInt16();
+			for (int i = 0; i < count; i++)
 			{
-				Entries[i].FileName = Encoding.ASCII.GetString(br2.ReadBytes(br2.ReadInt16()));
-				Entries[i].FileSize = br2.ReadInt32();
-				Entries[i].Time = br2.ReadInt32();
-				Entries[i].FileOffset = br2.ReadInt32();
+				string name = Encoding.ASCII.GetString(br2.ReadBytes(br2.ReadInt16()));
+				int size = br2.ReadInt32();
+				int time = br2.ReadInt32();
+				int offset = br2.ReadInt32();
+				_entries.Add(new ResourceEntry(name, size, null, time, offset));
 			}
 			br2.Close();
 
 			// Read the entry data
-			for (int i = 0; i < Entries.Length; i++)
+			for (int i = 0; i < _entries.Count; i++)
 			{
-				br.BaseStream.Seek(Entries[i].FileOffset, SeekOrigin.Begin);
+				ResourceEntry entry = _entries[i];
+				br.BaseStream.Seek(entry.FileOffset, SeekOrigin.Begin);
 
-				Entries[i].Data = br.ReadBytes(Entries[i].FileSize);
+				entry.Data = br.ReadBytes(entry.FileSize);
 
 				// If the data is encrypted, then we need to decrypt it...
 				if (this._encrypted == 1)
 				{
-					for (int l = 0; l < Entries[i].FileSize; l++)
+					for (int j = 0; j < _entries[i].FileSize; j++)
 					{
-						Entries[i].Data[l] = (byte)((16 * (this._encryptionKey ^ (byte)(~Entries[i].Data[l]))) | ((this._encryptionKey ^ (byte)(~Entries[i].Data[l])) >> 4));
+						entry.Data[j] = (byte)((16 * (this._encryptionKey ^ (byte)(~entry.Data[j]))) | ((this._encryptionKey ^ (byte)(~entry.Data[j])) >> 4));
 					}
 				}
+				_entries[i] = entry;
 			}
 			br.Close();
-		}
-
-		/// <summary>
-		/// Initializes an empty resource file
-		/// </summary>
-		public ResourceFile()
-		{
-			this._encryptionKey = (byte)new Random().Next(255);
-			this._encrypted = 0;
-		}
-
-		/// <summary>
-		/// Extracts the file at the specified index
-		/// </summary>
-		/// <param name="index">The index of the file</param>
-		/// <param name="path">The path to extract the file to</param>
-		public void ExtractFile(int index, string path)
-		{
-			FileStream fileStream = new FileStream(path, FileMode.Create);
-			fileStream.Write(Entries[index].Data, 0, Entries[index].FileSize);
-			fileStream.Close();
-		}
-
-		/// <summary>
-		/// Adds a file to the resource
-		/// </summary>
-		/// <param name="path">The path of the file to add</param>
-		public void AddFile(string path)
-		{
-			// Read in all the bytes
-			FileStream fileStream = new FileStream(path, FileMode.Open);
-			byte[] array = new byte[fileStream.Length];
-			fileStream.Read(array, 0, (int)fileStream.Length);
-			fileStream.Close();
-
-			// If the entries array is null, create it
-			if (Entries == null)
-			{
-				Entries = new ResourceEntry[1];
-				Entries[0].FileName = path.Substring(path.LastIndexOf('\\') + 1);
-				Entries[0].FileSize = array.Length;
-				Entries[0].Data = array;
-				Entries[0].Time = 0;
-				return;
-			}
-
-			// Resize the array
-			ResourceEntry[] array2 = new ResourceEntry[Entries.Length + 1];
-			for (int i = 0; i < Entries.Length; i++)
-			{
-				array2[i] = Entries[i];
-			}
-
-			array2[Entries.Length].FileName = path.Substring(path.LastIndexOf('\\') + 1);
-			array2[Entries.Length].FileSize = array.Length;
-			array2[Entries.Length].Data = array;
-			array2[Entries.Length].Time = 0;
-			Entries = array2;
-		}
-
-		/// <summary>
-		/// Removes the entry at the specified index
-		/// </summary>
-		/// <param name="index"></param>
-		public void Remove(int index)
-		{
-			// Create a new entry array with 1 less than the current one
-			ResourceEntry[] tmp = new ResourceEntry[Entries.Length - 1];
-
-			// Copy everything prior to the removed item into the new array
-			for (int i = 0; i < index; i++)
-			{
-				tmp[i] = Entries[i];
-			}
-
-			// Copy everything after the removed item into the new array
-			for (int j = index; j < Entries.Length - 1; j++)
-			{
-				tmp[j] = Entries[j + 1];
-			}
-
-			// Replace the old array with the new one
-			Entries = tmp;
 		}
 
 		/// <summary>
@@ -220,12 +263,11 @@ namespace ResEditor
 			int fileCount = 0;
 
 			// Calculate sizes
-			ResourceEntry[] entriesArray1 = Entries;
-			for (int i = 0; i < entriesArray1.Length; i++)
+			for (int i = 0; i < _entries.Count; i++)
 			{
-				ResourceEntry a = entriesArray1[i];
-				nameLength += a.FileName.Length + 14;
-				size += a.FileSize;
+				ResourceEntry entry = _entries[i];
+				nameLength += entry.FileName.Length + 14;
+				size += entry.FileSize;
 				fileCount++;
 			}
 
@@ -241,12 +283,11 @@ namespace ResEditor
 			// Create entry data buffer
 			byte[] entryData = new byte[size];
 			BinaryWriter bwEntryData = new BinaryWriter(new MemoryStream(entryData));
-			ResourceEntry[] entriesArray2 = Entries;
 
 			// Write the entries
-			for (int i = 0; i < entriesArray2.Length; i++)
+			for (int i = 0; i < _entries.Count; i++)
 			{
-				ResourceEntry entry = entriesArray2[i];
+				ResourceEntry entry = _entries[i];
 				bwHeaders.Write((short)entry.FileName.Length);
 				bwHeaders.Write(new ASCIIEncoding().GetBytes(entry.FileName));
 				bwHeaders.Write(entry.FileSize);

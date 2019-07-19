@@ -15,7 +15,8 @@ namespace ResEditor
 			Application.SetCompatibleTextRenderingDefault(false);
 			ResEditor form = new ResEditor();
 
-			form.args = args;
+			if (args.Length > 0)
+				form.Open(args[0]);
 
 			Application.Run(form);
 		}
