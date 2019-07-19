@@ -79,6 +79,11 @@ namespace ResEditor
 		public string FilePath;
 
 		/// <summary>
+		/// The number of entries in this resource
+		/// </summary>
+		public int Count => _entries.Count;
+
+		/// <summary>
 		/// Initializes an empty resource file
 		/// </summary>
 		public ResourceFile()
@@ -131,8 +136,11 @@ namespace ResEditor
 			_entries.RemoveAt(index);
 		}
 
-		public int Count => _entries.Count;
-
+		/// <summary>
+		/// Gets a resource at the specified index
+		/// </summary>
+		/// <param name="index">The index of the resource to get</param>
+		/// <returns>The resource at the specified index</returns>
 		public ResourceEntry this[int index]
 		{
 			get
