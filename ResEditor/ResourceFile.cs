@@ -281,61 +281,62 @@ namespace ResEditor
 
 			int nameLength2 = nameLength;
 
-			// Create header buffer
-			byte[] fileHeaders = new byte[nameLength];
-			BinaryWriter bwHeaders = new BinaryWriter(new MemoryStream(fileHeaders));
-
-			// Write the file count
-			bwHeaders.Write((short)fileCount);
-
-			// Create entry data buffer
-			byte[] entryData = new byte[size];
-			BinaryWriter bwEntryData = new BinaryWriter(new MemoryStream(entryData));
-
-			// Write the entries
-			for (int i = 0; i < _entries.Count; i++)
+			using (Stream s = File.Open(path, FileMode.Create))
+			using (BinaryWriter bw = new BinaryWriter(s))
 			{
-				ResourceEntry entry = _entries[i];
-				bwHeaders.Write((short)entry.FileName.Length);
-				bwHeaders.Write(new ASCIIEncoding().GetBytes(entry.FileName));
-				bwHeaders.Write(entry.FileSize);
-				bwHeaders.Write(entry.Time);
-				bwHeaders.Write(nameLength2 + 13);
-				bwEntryData.Write(entry.Data);
-				nameLength2 += entry.FileSize;
-			}
-			bwHeaders.Close();
-			bwEntryData.Close();
+				// Create header buffer
+				byte[] fileHeaders = new byte[nameLength];
 
-			// Encrypt the file headers
-			for (int i = 0; i < nameLength; i++)
-			{
-				fileHeaders[i] = (byte)(~(((fileHeaders[i] * 16) | (fileHeaders[i] >> 4)) ^ this._encryptionKey));
-			}
+				// Create entry data buffer
+				byte[] fileEntries = new byte[size];
 
-			// Encrypt entry data if nessecary
-			if (this._encrypted == 1)
-			{
-				for (int i = 0; i < size; i++)
+				using (MemoryStream msHeaders = new MemoryStream(fileHeaders))
+				using (BinaryWriter bwHeaders = new BinaryWriter(msHeaders))
 				{
-					entryData[i] = (byte)(~(((entryData[i] * 16) | (entryData[i] >> 4)) ^ this._encryptionKey));
+					// Write the file count
+					bwHeaders.Write((short)fileCount);
+
+					using (MemoryStream msEntryData = new MemoryStream(fileEntries))
+					using (BinaryWriter bwEntryData = new BinaryWriter(msEntryData))
+					{
+						// Write the entries
+						for (int i = 0; i < _entries.Count; i++)
+						{
+							ResourceEntry entry = _entries[i];
+							bwHeaders.Write((short)entry.FileName.Length);
+							bwHeaders.Write(new ASCIIEncoding().GetBytes(entry.FileName));
+							bwHeaders.Write(entry.FileSize);
+							bwHeaders.Write(entry.Time);
+							bwHeaders.Write(nameLength2 + 13);
+							bwEntryData.Write(entry.Data);
+							nameLength2 += entry.FileSize;
+						}
+					}
 				}
+
+				// Encrypt the file headers
+				for (int i = 0; i < nameLength; i++)
+				{
+					fileHeaders[i] = (byte)(~(((fileHeaders[i] * 16) | (fileHeaders[i] >> 4)) ^ this._encryptionKey));
+				}
+
+				// Encrypt entry data if nessecary
+				if (this._encrypted == 1)
+				{
+					for (int i = 0; i < size; i++)
+					{
+						fileEntries[i] = (byte)(~(((fileEntries[i] * 16) | (fileEntries[i] >> 4)) ^ this._encryptionKey));
+					}
+				}
+
+				// Write all the data to the file
+				bw.Write(this._encryptionKey);
+				bw.Write(this._encrypted);
+				bw.Write(nameLength + 7);
+				bw.Seek(7, SeekOrigin.Current);
+				bw.Write(fileHeaders);
+				bw.Write(fileEntries);
 			}
-
-			// Write the file
-			FileStream fileStream = new FileStream(path, FileMode.Create);
-			BinaryWriter bwMain = new BinaryWriter(fileStream);
-
-			// Write all the data to the file
-			bwMain.Write(this._encryptionKey);
-			bwMain.Write(this._encrypted);
-			bwMain.Write(nameLength + 7);
-			bwMain.Seek(7, SeekOrigin.Current);
-			bwMain.Write(fileHeaders);
-			bwMain.Write(entryData);
-
-			bwMain.Close();
-			fileStream.Close();
 		}
 	}
 }
