@@ -321,13 +321,13 @@ namespace ResEditor
 		{
 			switch (Path.GetExtension(filename))
 			{
-				case "h":
+				case ".h":
 					return 1;
-				case "inc":
+				case ".inc":
 					return 2;
-				case "csv":
+				case ".csv":
 					return 3;
-				case "txt":
+				case ".txt":
 					return 4;
 				default:
 					return 0;
@@ -338,13 +338,13 @@ namespace ResEditor
 		{
 			switch (Path.GetExtension(filename))
 			{
-				case "inc":
+				case ".inc":
 					return "Include Files (*.inc)|*.inc";
-				case "h":
+				case ".h":
 					return "Header Files (*.h)|*.h";
-				case "csv":
+				case ".csv":
 					return "Comma Separated Value Files (*.csv)|*.csv";
-				case "txt":
+				case ".txt":
 					return "Text Files (*.txt)|*.txt";
 				default:
 					return "All Files|*.*";
